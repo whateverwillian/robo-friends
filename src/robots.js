@@ -47,4 +47,16 @@ export const robots = [
     username: 'allrightx3@gmail.com',
     email: 'alogaleradecouboy@random.com'
   },
+  {
+    id: 9,
+    name: 'Blablabla blo',
+    username: 'sdals@gmail.com',
+    email: 'loremlolo@random.com'
+  },
+  {
+    id: 10,
+    name: 'Giant Head',
+    username: 'gianthead@gmail.com',
+    email: 'alogaleradecouboy@random.com'
+  },
 ]
