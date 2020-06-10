@@ -27,7 +27,7 @@ Vamos ter um "initialState" pro caso de um state não ser informado
 
     ex:
 
-    ```
+    
     const searchRobots = (state = initialState, action = {}) => {
 
       // Vamos ter um comportamento específico para a ação
@@ -43,7 +43,7 @@ Vamos ter um "initialState" pro caso de um state não ser informado
       }
     }
     
-    ```
+    
 
 Agora temos uma action (setSearchField que pega o input do usuário digitado na caixa de busca) e temos um reducer (serachRobots que recebe um state, e uma action, e baseado na action, retorna um novo estado)...
 
@@ -60,7 +60,7 @@ Porém, antes precisamos criar o tal do Store, então vamos criar
 
     ex: 
 
-    ```
+    
     import { createStore } from 'redux'
 
     // Aqui vamos passar o reducer
@@ -71,14 +71,14 @@ Porém, antes precisamos criar o tal do Store, então vamos criar
     // "rootReducer", e vamos usar esse rootReducer como parâmetro
     // no createStore()
 
-    ```
+    
 Agora temos nosso estado, podemos passar ele como props no nosso componente <App />, porém ao fazer isso, vamos passar o estado para TODOS os componentes da aplicação que estão abaixo de <App />
 
 Para evitar isso, podemos envolver nosso <App /> component em um <Provider />
 
     ex:
 
-    ```
+    
     import { Provider } from 'react-redux'
 
     ...
@@ -89,12 +89,12 @@ Para evitar isso, podemos envolver nosso <App /> component em um <Provider />
     )
     ...
 
-    ```
+    
 Como eu disse anteriormente, temos o lado que provê e o lado que consome o state, acabamos de prover o state como props através do Provider, fizemos um lado da ligação, o próximo passo para acessar esse state nos componentes filhos é fazer o outro lado, que é feito no componente que vai acessar o state
 
     ex:
 
-    ```
+    
     import { connect } from 'react-redux' // Que faz a tal ligação
     import { setSearchField } from '../actions' // A ação
 
@@ -127,7 +127,7 @@ Como eu disse anteriormente, temos o lado que provê e o lado que consome o stat
       onSearchChange = event => dispatch(setSearchField(event.target.value))
     })
 
-    ```
+    
 Agora, podemos tirar nosso "input handler" ou "action handler" que antes era declarado no código, e pegamos esse método através do props
 A mesma coisa com o state searchField, também vai vir das props
 
