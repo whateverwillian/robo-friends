@@ -1,68 +1,137 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Redux
 
-## Available Scripts
+O fluxo do redux é 
 
-In the project directory, you can run:
+    Action => Reducer => Store => Reflects on React (render the changes)
 
-### `yarn start`
+A primeira coisa que vamos fazer é criar uma action e um reducer
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+uma action é alguma ação que o usuário pode fazer na aplicação
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+    ex:
 
-### `yarn test`
+    ```
+    const setSearchField = text => ({
+      type: 'CHANGE_SEARCH_FIELD',
+      payload: text,
+    })
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+    ```
 
-### `yarn build`
+Essa função (action) pega o input do usuário e cria um objeto com o tipo da ação e o payload, que são os dados do usuário
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+já o reducer é uma função que lê a action e devolve um novo state, para isso
+o reducer recebe dois parâmetros: o state e a action
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+Vamos ter um "initialState" pro caso de um state não ser informado
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    ex:
 
-### `yarn eject`
+    ```
+    const searchRobots = (state = initialState, action = {}) => {
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+      // Vamos ter um comportamento específico para a ação
+      switch(action.type) {
+        case CHANGE_SEARCH_FIELD:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+          // Vamos gerar um novo state clonando o state antigo
+          // e atualizando o campo necessário
+          return { ...state, searchField: action.payload }
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+        default:
+          return state
+      }
+    }
+    
+    ```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Agora temos uma action (setSearchField que pega o input do usuário digitado na caixa de busca) e temos um reducer (serachRobots que recebe um state, e uma action, e baseado na action, retorna um novo estado)...
 
-## Learn More
+Olhando para o fluxo, já temos
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    Action [x] => Reducer [x] => Store [ ] => Render [ ]
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+além disso, precisamos do react-redux para ligar as duas partes da aplicação:
 
-### Code Splitting
+    Provider: 'Que provê o estado da aplicação',
+    connect: 'Que é o lado que consome o estado'
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+Porém, antes precisamos criar o tal do Store, então vamos criar
 
-### Analyzing the Bundle Size
+    ex: 
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+    ```
+    import { createStore } from 'redux'
 
-### Making a Progressive Web App
+    // Aqui vamos passar o reducer
+    const store = createStore(searchRobots)
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+    // Obs. Vamos ter muitos reducers, nesse caso passamos um só
+    // mas no caso de muitos reducers, vamos combinar eles em um só
+    // "rootReducer", e vamos usar esse rootReducer como parâmetro
+    // no createStore()
 
-### Advanced Configuration
+    ```
+Agora temos nosso estado, podemos passar ele como props no nosso componente <App />, porém ao fazer isso, vamos passar o estado para TODOS os componentes da aplicação que estão abaixo de <App />
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+Para evitar isso, podemos envolver nosso <App /> component em um <Provider />
 
-### Deployment
+    ex:
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+    ```
+    import { Provider } from 'react-redux'
 
-### `yarn build` fails to minify
+    ...
+    (
+      <Provider store={store}>
+        <App />
+      </Provider>
+    )
+    ...
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+    ```
+Como eu disse anteriormente, temos o lado que provê e o lado que consome o state, acabamos de prover o state como props através do Provider, fizemos um lado da ligação, o próximo passo para acessar esse state nos componentes filhos é fazer o outro lado, que é feito no componente que vai acessar o state
+
+    ex:
+
+    ```
+    import { connect } from 'react-redux' // Que faz a tal ligação
+    import { setSearchField } from '../actions' // A ação
+
+
+    // O connect é uma High order function, ou seja, uma fn que retorna uma fn
+    // E ela recebe dois parâmetros:
+    // 1) mapStateToProps => Traz o estado para as props
+    // 2) mapDispatchToProps => Traz a "ação" pro props
+    export default connect(mapStateToProps, mapDispatchToProps)(App)
+
+    // Nós conectamos o App com a Store, e toda vez que houver uma mudança em 
+    // App, talvez o Redux store deva ser informado
+    // E essas duas funções dizem:
+    // 1) Qual estado estamos interessados
+    // 2) Quais ações estamos interessados
+
+    const mapStateToProps = state => {
+      return {
+        // Nosso state, o mesmo campo descrito no reducer
+        // Descrevemos aqui as informações que queremos, em relação ao state
+        // Queremos searchField, que está dentro do reducer searchBox, que está
+        // Dentro do state do redux
+        searchField: state.searchRobots.searchField || state.searchField
+      }
+    }
+
+    const mapDispatchToProps = dispatch => ({
+      // Temos aqui o nosso método que vai vir no props
+      // E lida com as ações do usuário
+      onSearchChange = event => dispatch(setSearchField(event.target.value))
+    })
+
+    ```
+Agora, podemos tirar nosso "input handler" ou "action handler" que antes era declarado no código, e pegamos esse método através do props
+A mesma coisa com o state searchField, também vai vir das props
+
+Agora, terminamos o fluxo
+
+    Action [x] => Reducer [x] => Store [x] => Render [x]
+
