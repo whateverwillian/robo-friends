@@ -1,5 +1,7 @@
 # Redux
 
+Redux usa uma arquitetura chamada "Flux pattern"
+
 O fluxo do redux é 
 
     Action => Reducer => Store => Reflects on React (render the changes)
@@ -10,13 +12,11 @@ uma action é alguma ação que o usuário pode fazer na aplicação
 
     ex:
 
-    ```
     const setSearchField = text => ({
       type: 'CHANGE_SEARCH_FIELD',
       payload: text,
     })
 
-    ```
 
 Essa função (action) pega o input do usuário e cria um objeto com o tipo da ação e o payload, que são os dados do usuário
 
