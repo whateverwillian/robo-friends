@@ -135,3 +135,124 @@ Agora, terminamos o fluxo
 
     Action [x] => Reducer [x] => Store [x] => Render [x]
 
+
+# Redux Async Actions
+
+Usamos "redux-thunk" para lidar com actions que são assíncronas
+
+Primeiro nós importamos a biblioteca, e colocamos na cadeia de middlewares
+
+Agora, para fazer o uso dessa middleware, primeiro precisamos criar três constantes relacionadas à chamada assíncrona
+
+    PENDING - Enquanto a promise ainda está pendente
+    SUCCESS - Quando a promise é resolvida
+    FAILED - Quando a promise é rejeitada
+
+Agora vamos criar nossa action "requestRobots" e dessa vez, a action vai recer o "dispatch" como parametro, o mesmo que nós utilizamos anteriormente para despachar as actions
+
+    const requestRobots = dispatch => {
+      // A primeira coisa que queremos fazer ao realizar essa action
+      // é avisar que agora ela está pendente...
+      dispatch({ type: REQUEST_ROBOTS_PENDING }) // No payload
+
+      // Agora vamos fazer a chamada à API
+      fetch('https://jsonplaceholder.typicode.com/users')
+        .then(response => response.json())
+
+        // Se a promise for resolvida, vamos despachar o status de sucesso junto com os dados
+        .then(data => dispatch({ type: REQUEST_ROBOTS_SUCCESS, payload: data })) 
+
+        // Se não for resolvida, vamos depachar o status de falha junto com o erro
+        .catch(error => dispatch({ type: REQUEST_ROBOTS_FAILED, payload: error }))
+    }
+
+Agora, vamos ao reducer da action em questão
+
+    const requestRobots = (state = initialState, action = {}) => {
+      switch(action.type) {
+        
+        // Caso a promise esteja pendente...
+        case REQUEST_ROBOTS_PENDING:
+          return { ...state, isPending: true }
+
+        // Caso a promise seja resolvida
+        case REQUEST_ROBOTS_SUCCESS:
+          return { ...state, isPending: false, robots: action.payload }
+
+        // Caso ocorra um erro...
+        case REQUEST_ROBOTS_FAILED:
+          return { ...state, isPending: false, error: action.payload }
+
+        // Por padrão, vamos devolver o próprio state
+        default:
+          return state
+
+      }
+    }
+
+Porém, agora temos dois reducers, e anteriormente colocamos apenas um no nosso createStore(),
+para resolver isso o redux disponibiliza uma função chamada combineReducers, que combina reducers asdkaopdkao
+
+    import { combineReducers } from 'redux';
+
+    const rootReducer = combineReducers({ reducer1, reducer2 })
+
+    // E na hora de utilizar o state, fica assim:
+    // No nosso mapStateToProps
+    state.reducer1.example
+
+O redux-thunk é uma middleware que checka os retornos das actions, por padrão, action síncronas retornam um objeto, já uma action assíncrona retorna uma função, quando ele vê um retorno de função ao invés de objeto, ele sabe que a action é assíncrona
+
+Agora para ter acesso às mudanças no state, precisamos mapear as mudanças para nossas props, no mapStateToProps...
+
+    // state atualizado
+    const mapStateToProps = state => {
+      return {
+        searchField, state.searchRobots.searchField,
+        robots: state.requestRobots.robots,
+        isPending: state.requestRobots.isPending,
+        error: state.requestRobots.error,
+      }
+    }
+
+Agora temos nossa action pronta e o reducer também, mas ainda não estamos utilizando... Para isso, vamos mapear o método requestRobots para termos acesso
+
+    // Actions atualizadas
+    const mapDispatchToProps = (dispatch) => {
+      return (
+        onSearchChange: (event) => dispatch(setSearchField(event.target.value)),
+
+        // Essa fn vai retornar uma fn, e vai receber dispatch como parâmetro
+        onRequestRobots: () => requestRobots(dispatch)
+
+        // Ou podemos escrever assim, o redux thunk percebe que estamos despachando 
+        // uma fn, ou seja, estamos passando uma fn como parâmetro, e age
+        onRequestRobots: () => dispatch(requestRobots()) // Segunda opção
+      )
+    }
+
+    // No caso de usar a segunda opção precisamos mudar nossa action, assim:
+      const requestRobots = dispatch => {} // antes
+      const requestRobots = () => (dispatch) => {} // depois
+
+Relembrando:
+
+    // 1) Podemos declarar a action como uma função mesmo
+    const requestRobots = dispatch => {}
+
+    // E passar o dispatch como parâmetro
+    onRequestRobots: () => requestRobots(dispatch)
+
+    // 2) OU podemos podemos declarar a action como uma high order fn (que retorna uma fn)
+    const requestRobots = () => (dispatch) => {}
+
+    // e passar essa fn retornada como um parâmetro para dispatch
+    onRequestRobots: () => dispatch(requestRobots())
+
+    // 3) E para efetivamente fazer à requisição dos robos usamos o hook
+    componentDidMount() {
+      this.props.onRequestRobots()
+    }
+
+E agora não mais precisamos do constructor porque nosso state vem de outro lugar.
+
