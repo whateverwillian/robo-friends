@@ -255,4 +255,3 @@ Relembrando:
     }
 
 E agora não mais precisamos do constructor porque nosso state vem de outro lugar.
-
